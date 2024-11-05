@@ -1,56 +1,70 @@
-# Jenkins Agent Setup on Windows Server
+# Getting Started with Create React App
 
-This guide walks you through the setup of a Jenkins agent on a Windows server using WinSW (Windows Service Wrapper). It ensures the Jenkins agent runs as a Windows service and automatically reconnects after reboots or service interruptions.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Prerequisites
+## Available Scripts
 
-- Java is installed on the system.
-- Jenkins master server is set up.
-- Jenkins agent JAR file (`agent.jar`) downloaded from your Jenkins server.
-- Windows Server with administrative privileges.
+In the project directory, you can run:
 
-## Setup Instructions
+### `npm start`
 
-### Step 1: Download and Install WinSW
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-1. Download the latest **WinSW** executable from the [WinSW releases page](https://github.com/winsw/winsw/releases).
-2. Rename the downloaded WinSW executable to `JenkinsAgent.exe`.
-3. Move `JenkinsAgent.exe` to your Jenkins agent working directory, for example: `C:\Dhaval-Jenkins`.
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-### Step 2: Create the JenkinsAgent Configuration File
+### `npm test`
 
-1. Navigate to the working directory (`C:\Dhaval-Jenkins`).
-2. Create an XML file named `JenkinsAgent.xml`.
-3. Add the following configuration to `JenkinsAgent.xml`:
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-   ```xml
-   <service>
-     <id>JenkinsAgent</id>
-     <name>Jenkins Agent</name>
-     <description>This is the Jenkins agent service for the 'dev' node.</description>
-     <executable>java</executable>
-     <arguments>-jar "C:\Dhaval-Jenkins\agent.jar" -jnlpUrl http://38.242.198.81:8080/computer/dev/slave-agent.jnlp -secret e9c24088c090fe18a2857f2d97f0e8bc13e69c3afff836021f1bfa68f306ea5c -workDir "C:\Dhaval-Jenkins"</arguments>
-     <logpath>C:\Dhaval-Jenkins\logs</logpath>
-     <startmode>Automatic</startmode>
-   </service>
+### `npm run build`
 
-### Step 3: Install Jenkins Agent as a Windows Service
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-1. Install the service:
-Use the following command to install the Jenkins agent as a Windows service:
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-.\JenkinsAgent.exe install
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-2. Start the service:
-After the service is installed, you can start it using:
+### `npm run eject`
 
-.\JenkinsAgent.exe start
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-3. Check the service status:
-To check whether the service is running, use:
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-.\JenkinsAgent.exe status
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
+## Learn More
 
-now check jenkins and check agent is connected 
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
+
+### Code Splitting
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+
+### Analyzing the Bundle Size
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+
+### Making a Progressive Web App
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+
+### Advanced Configuration
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+
+### Deployment
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+
+### `npm run build` fails to minify
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
