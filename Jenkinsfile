@@ -7,9 +7,15 @@ pipeline {
         DOCKER_IMAGE_TAG = 'backend-test:dev'  // Custom tag format
     }
     stages {
-        stage ('Checkout') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                // Checkout the specific branch 'nodejs-backend'
+                script {
+                    checkout([$class: 'GitSCM', 
+                              branches: [[name: '*/nodejs-backend']], 
+                              userRemoteConfigs: [[url: 'https://github.com/dhavalsavai/jenkins.git']]
+                    ])
+                }
             }
         }
         stage('Build Docker Image') {
@@ -52,4 +58,3 @@ pipeline {
         }
     }
 }
-
