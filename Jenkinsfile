@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'docker-node' } // Specify your Jenkins agent
+    agent { label 'prod-node' } // Specify your Jenkins agent
 
     environment {
         DOCKER_HUB_REPO = 'dksavai/dksavai-test'  // Your Docker Hub repository
