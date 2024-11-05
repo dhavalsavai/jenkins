@@ -1,0 +1,18 @@
+{
+  "name": "jenkins",
+  "version": "1.0.0",
+  "description": "This guide walks you through the setup of a Jenkins agent on a Windows server using WinSW (Windows Service Wrapper). It ensures the Jenkins agent runs as a Windows service and automatically reconnects after reboots or service interruptions.",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}
+
