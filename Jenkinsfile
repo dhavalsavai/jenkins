@@ -1,5 +1,3 @@
-#!/usr/bin/env groovy
-
 pipeline {
     agent any
     environment {
@@ -9,11 +7,13 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the specific branch 'nodejs-backend'
                 script {
                     checkout([$class: 'GitSCM', 
                               branches: [[name: '*/nodejs-backend']], 
-                              userRemoteConfigs: [[url: 'https://github.com/dhavalsavai/jenkins.git']]
+                              userRemoteConfigs: [[
+                                  url: 'https://github.com/dhavalsavai/jenkins.git',
+                                  credentialsId: 'github-id' // Add credentials for private repo
+                              ]]
                     ])
                 }
             }
