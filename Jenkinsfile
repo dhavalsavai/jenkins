@@ -2,7 +2,7 @@ pipeline {
     agent { label 'docker-node' }
     environment {
         DOCKER_HUB_REPO = 'dksavai/dksavai-test'  // Your Docker Hub repository
-        DOCKER_IMAGE_TAG = 'backend-test:dev'  // Custom tag format
+        DOCKER_IMAGE_TAG = 'backend-test-dev'  // Custom tag format
     }
     stages {
         stage('Checkout') {
