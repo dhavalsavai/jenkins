@@ -9,7 +9,7 @@ pipeline {
             steps {
                 script {
                     checkout([$class: 'GitSCM', 
-                              branches: [[name: '*/nodejs-backend']], 
+                              branches: [[name: 'nodejs-backend']], 
                               userRemoteConfigs: [[
                                   url: 'https://github.com/dhavalsavai/jenkins.git',
                                   credentialsId: 'github-id' // Add credentials for private repo
