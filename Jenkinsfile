@@ -134,7 +134,7 @@ pipeline {
             }
             steps {
                 script {
-                        def servers = [‘192.168.1.13’]
+                        def servers = ['192.168.1.13']
                         def branch = 'prod-frontend'
                         deploy (servers,branch)
                     }
