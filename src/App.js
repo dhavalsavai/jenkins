@@ -6,7 +6,7 @@ function App() {
         <div className="App">
             <div className="message-box">
                 <h1 className="title">This is</h1>
-                <p className="subtitle">Dev Server</p>
+                <p className="subtitle">Dev Server deployment using pipeline</p>
             </div>
         </div>
     );
