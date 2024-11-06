@@ -92,7 +92,7 @@ pipeline {
             }
         }
 
-        stage('Tag and Push to ECR') {
+        stage('Push to dockerhub') {
             when {
                    anyOf {
 		    branch 'react-frontend'
