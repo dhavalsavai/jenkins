@@ -1,11 +1,52 @@
-pipeline {
-    agent { label 'prod-server' } // Specify your Jenkins agent
+#!/usr/bin/env groovy
 
+def deploy(servers, branch) {
+    script {
+        for (item in servers) {
+            println "Deploying to ${item}."
+            if (branch == 'react-frontend') {
+                // Run the alias command for react-frontend
+                sh(script: """
+                whoami
+                server
+                """)
+            } else if (branch == 'prod-frontend') {
+                // Run the deployment script directly on prod-frontend
+                sh(script: """
+                whoami
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+                    ./deploy-be-staging.sh
+                '"
+                """)
+            }
+        }
+    }
+}
+
+
+def deploy_docker(servers, branch = '') {
+    script {
+        for (item in servers) {
+            println "Deploying to ${item}."
+            sh(script: """
+	    whoami
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+               cd /home/ubuntu/scripts && source ~/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
+            '"
+            """)
+        }
+    }
+}
+pipeline {
+    agent {
+        node {
+            label ‘prod-server'
+        }
+    }
     environment {
         DOCKER_HUB_REPO = 'dksavai/dksavai-test'  // Your Docker Hub repository
-        DOCKER_IMAGE_TAG = 'frontend-dev'          // Custom tag for the Docker image
-    }
-
+        DOCKER_IMAGE_TAG = 'frontend-dev' 
+    }    
     stages {
         stage('Checkout') {
             steps {
@@ -21,16 +62,25 @@ pipeline {
                 }
             }
         }
-
-        stage('Build Docker Image') {
+        stage('Main Build Docker Image') {
+            when {
+                   anyOf {
+		      branch 'react-frontend'
+                   }
+            }
             steps {
                 script {
-                    // Build the Docker image
-                    sh 'docker build -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+                // Build your Docker image here
+                if (env.GIT_BRANCH == 'production-test') {
+                sh 'cp /var/jenkins_home/env/.env.prod .env'
+	        sh 'docker build -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+                } else if (env.GIT_BRANCH == 'develop') {
+                sh 'cp /var/jenkins_home/env/.env.dev .env'
+	        sh 'docker build -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+                }
                 }
             }
         }
-
         stage('Login to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials-id', 
@@ -42,32 +92,64 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
-            steps {
-                // Push the image to Docker Hub
-                sh "docker push $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG"
+        stage('Tag and Push to ECR') {
+            when {
+                   anyOf {
+		    branch 'react-frontend'
+                   }
             }
-        }
-
-        stage('Deploy on Jenkins Server') {
             steps {
                 script {
-                    // Deploy the application
-                    sh """
-                    docker pull $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG
-                    docker stop my-react-app || true
-                    docker rm my-react-app || true
-                    docker run -d --name my-react-app -p 3002:80 $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG
-                    """
+                 if (env.GIT_BRANCH == 'production-test') {
+                sh "docker push $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG"
+                // Cleanup the Docker image
+                 } else if (env.GIT_BRANCH == 'react-frontend') {
+                // Push the Docker image to ECR
+                sh "docker push $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG"
+                // Cleanup the Docker image
+                 }
                 }
             }
-        }
-    }
-
+            } 	        
+        stage ('deploy to dev') {
+            when {
+                branch 'react-frontend'
+            }
+            steps {
+                script {
+                        def servers = ['38.242.198.81']
+                        def branch = 'react-frontend'
+                        deploy_docker (servers,branch)
+                    }
+                }
+            post {
+                always {
+            echo 'I will always run!'
+                }
+            }                
+			}
+        stage ('deploy to staging ') {
+            when {
+                branch 'prod-frontend'
+            }
+            steps {
+                script {
+                        def servers = [‘192.168.1.13’]
+                        def branch = 'prod-frontend'
+                        deploy (servers,branch)
+                    }
+                }
+            post {
+                always {
+            echo 'I will always run!'
+                }
+            }             
+			}
+       	}
     post { 
         always { 
-            echo 'Pipeline execution complete.'
+            echo 'I will always run!'
+           
         }
     }
 }
-
