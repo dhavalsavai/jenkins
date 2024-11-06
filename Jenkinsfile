@@ -40,7 +40,7 @@ def deploy_docker(servers, branch = '') {
 pipeline {
     agent {
         node {
-            label ‘prod-server'
+            label 'prod-server'
         }
     }
     environment {
