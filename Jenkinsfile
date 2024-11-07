@@ -40,7 +40,7 @@ def deploy_docker(servers, branch = '') {
 pipeline {
     agent {
         node {
-            label ‘prod-server'
+            label 'prod-server'
         }
     }
     environment {
@@ -134,7 +134,7 @@ pipeline {
             }
             steps {
                 script {
-                        def servers = [‘192.168.1.13’]
+                        def servers = ['192.168.1.13']
                         def branch = 'prod-frontend'
                         deploy (servers,branch)
                     }
