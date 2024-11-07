@@ -7,7 +7,7 @@ def deploy(servers, branch) {
             if (branch == 'react-frontend') {
                 // Run the alias command for react-frontend
                 sh(script: """
-                whoami
+          
                 server
                 """)
             } else if (branch == 'prod-frontend') {
@@ -30,7 +30,7 @@ def deploy_docker(servers, branch = '') {
             println "Deploying to ${item}."
             sh(script: """
 	    whoami
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+            server
                cd /home/ubuntu/scripts && source ~/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
             '"
             """)
@@ -40,7 +40,7 @@ def deploy_docker(servers, branch = '') {
 pipeline {
     agent {
         node {
-            label 'prod-server'
+            label ‘prod-server'
         }
     }
     environment {
@@ -92,7 +92,7 @@ pipeline {
             }
         }
 
-        stage('Push to dockerhub') {
+        stage('Tag and Push to ECR') {
             when {
                    anyOf {
 		    branch 'react-frontend'
@@ -134,7 +134,7 @@ pipeline {
             }
             steps {
                 script {
-                        def servers = ['192.168.1.13']
+                        def servers = [‘192.168.1.13’]
                         def branch = 'prod-frontend'
                         deploy (servers,branch)
                     }
