@@ -31,7 +31,8 @@ def deploy_docker(servers, branch = '') {
             sh(script: """
 	    whoami
             sshpass -p 'HrQ43B6mtjj2mVOTYq9hoyMq' ssh -p 2208 -o StrictHostKeyChecking=no root@'${item}' bash -c "'
-               cd /home/ubuntu/scripts && source ~/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
+               cd /home/ubuntu/scripts && source /home/ubuntu/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
+	       whoami
             '"
             """)
         }
