@@ -14,7 +14,7 @@ def deploy(servers, branch) {
                 // Run the deployment script directly on prod-frontend
                 sh(script: """
                 whoami
-                ssh -p 2208 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+                ssh -p 2208 -o StrictHostKeyChecking=no -o root@'${item}' bash -c "'
                     ./deploy-be-staging.sh
                 '"
                 """)
@@ -30,7 +30,7 @@ def deploy_docker(servers, branch = '') {
             println "Deploying to ${item}."
             sh(script: """
 	    whoami
-            ssh -p 2208 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+            sshpass -p 'HrQ43B6mtjj2mVOTYq9hoyMq' ssh -p 2208 -o StrictHostKeyChecking=no root@'${item}' bash -c "'
                cd /home/ubuntu/scripts && source ~/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
             '"
             """)
