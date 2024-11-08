@@ -72,12 +72,12 @@ pipeline {
             steps {
                 script {
                 // Build your Docker image here
-                if (env.GIT_BRANCH == 'production-test') {
+                if (env.GIT_BRANCH == 'prod-frontend') {
                 sh 'cp /var/jenkins_home/env/.env.prod .env'
-	        sh 'docker build -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
-                } else if (env.GIT_BRANCH == 'develop') {
+	        sh 'docker build --platform linux/amd64 -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+                } else if (env.GIT_BRANCH == 'react-frontend') {
                 sh 'cp /var/jenkins_home/env/.env.dev .env'
-	        sh 'docker build -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+	        sh 'docker build --platform linux/amd64 -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
                 }
                 }
             }
