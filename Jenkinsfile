@@ -14,7 +14,7 @@ def deploy(servers, branch) {
                 // Run the deployment script directly on prod-frontend
                 sh(script: """
                 whoami
-                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+                ssh -p 2208 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
                     ./deploy-be-staging.sh
                 '"
                 """)
