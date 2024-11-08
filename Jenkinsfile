@@ -30,7 +30,7 @@ def deploy_docker(servers, branch = '') {
             println "Deploying to ${item}."
             sh(script: """
 	    whoami
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+            ssh -p 2208 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
                cd /home/ubuntu/scripts && source ~/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
             '"
             """)
