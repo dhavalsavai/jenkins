@@ -14,6 +14,9 @@ def deploy(servers, branch) {
                 // Run the deployment script directly on prod-frontend
                 sh(script: """
                 whoami
+		sshpass -p 'P@ssw0rd' ssh -o StrictHostKeyChecking=no root@'${item}' bash -c "'
+               	cd /home/ubuntu/scripts && source /home/ubuntu/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
+	       whoami
                     ./deploy-be-staging.sh
                 '"
                 """)
