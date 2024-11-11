@@ -14,10 +14,8 @@ def deploy(servers, branch) {
                 // Run the deployment script directly on prod-frontend
                 sh(script: """
                 whoami
-		sshpass -p 'P@ssw0rd' ssh -o StrictHostKeyChecking=no root@'${item}' bash -c "'
+		sudo sshpass -p 'P@ssw0rd' ssh -o StrictHostKeyChecking=no root@'${item}' bash -c "'
                	cd /home/ubuntu/scripts && source /home/ubuntu/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
-	       whoami
-                    ./deploy-be-staging.sh
                 '"
                 """)
             }
@@ -68,7 +66,7 @@ pipeline {
         stage('Main Build Docker Image') {
             when {
                    anyOf {
-		      branch 'react-frontend'
+		      branch 'prod-frontend'
                    }
             }
             steps {
@@ -76,10 +74,10 @@ pipeline {
                 // Build your Docker image here
                 if (env.GIT_BRANCH == 'prod-frontend') {
                 sh 'cp /var/jenkins_home/env/.env.prod .env'
-	        sh 'docker build --platform linux/amd64 -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+	        sh 'docker build -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
                 } else if (env.GIT_BRANCH == 'react-frontend') {
                 sh 'cp /var/jenkins_home/env/.env.dev .env'
-	        sh 'docker build --platform linux/amd64 -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+	        sh 'docker build -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
                 }
                 }
             }
