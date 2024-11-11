@@ -1,28 +1,22 @@
 #!/usr/bin/env groovy
 
-def deploy(servers, branch) {
+def deploy (servers, branch) {
     script {
         for (item in servers) {
             println "Deploying to ${item}."
-            if (branch == 'react-frontend') {
-                // Run the alias command for react-frontend
-                sh(script: """
-          
-                server
-                """)
-            } else if (branch == 'prod-frontend') {
-                // Run the deployment script directly on prod-frontend
-                sh(script: """
-                whoami
-                ssh -p 2208 -o StrictHostKeyChecking=no -o root@'${item}' bash -c "'
-                    ./deploy-be-staging.sh
-                '"
-                """)
-            }
+            sh(script: """
+	    whoami
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+                if [ ${branch} == 'prod' ]; then
+                    ./deploy-fe-prod.sh
+                elif [ ${branch} == 'develop' ]; then
+                    ./deploy-fe.sh
+                fi
+            '"
+            """)
         }
     }
 }
-
 
 def deploy_docker(servers, branch = '') {
     script {
@@ -30,9 +24,8 @@ def deploy_docker(servers, branch = '') {
             println "Deploying to ${item}."
             sh(script: """
 	    whoami
-            sshpass -p 'HrQ43B6mtjj2mVOTYq9hoyMq' ssh -p 2208 -o StrictHostKeyChecking=no root@'${item}' bash -c "'
-               cd /home/ubuntu/scripts && source /home/ubuntu/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
-	       whoami
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+               cd /home/ubuntu/scripts && source ~/scripts/deploy.sh && zero_downtime_deploy_fe_'${branch}'
             '"
             """)
         }
@@ -41,116 +34,170 @@ def deploy_docker(servers, branch = '') {
 pipeline {
     agent {
         node {
-            label 'prod-server'
+            label 'docker-node'
         }
     }
     environment {
-        DOCKER_HUB_REPO = 'dksavai/dksavai-test'  // Your Docker Hub repository
-        DOCKER_IMAGE_TAG = 'frontend-dev' 
-    }    
+        AWS_REGION = 'eu-west-2'  // e.g., 'us-east-1'
+        AWS_CREDENTIALS = 'ecr'  // The ID of the AWS credentials added in Jenkins
+        ECR_REPOSITORY = '466220267847.dkr.ecr.eu-west-2.amazonaws.com'  // The name of your ECR repository
+        DOCKER_IMAGE_NAME = 'careapps_frontend'  // The name to tag your Docker image with
+    }
     stages {
-        stage('Checkout') {
+        stage ('Checkout') {
             steps {
-                script {
-                    // Checkout the specific branch 'nodejs-backend'
-                    checkout([$class: 'GitSCM', 
-                              branches: [[name: 'react-frontend']], 
-                              userRemoteConfigs: [[
-                                  url: 'https://github.com/dhavalsavai/jenkins.git',
-                                  credentialsId: 'github-id' // Add credentials for private repo
-                              ]]
-                    ])
-                }
+                checkout scm: [
+                    $class: 'GitSCM',
+                    branches: scm.branches,
+                    doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+                    extensions: [[$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: '']],
+                    userRemoteConfigs: scm.userRemoteConfigs
+                ]
             }
         }
         stage('Main Build Docker Image') {
             when {
                    anyOf {
-		      branch 'react-frontend'
+                     branch 'production';
+                     branch 'staging';
+		      branch 'develop'
                    }
             }
             steps {
                 script {
                 // Build your Docker image here
-                if (env.GIT_BRANCH == 'prod-frontend') {
-                sh 'cp /var/jenkins_home/env/.env.prod .env'
-	        sh 'docker build --platform linux/amd64 -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
-                } else if (env.GIT_BRANCH == 'react-frontend') {
-                sh 'cp /var/jenkins_home/env/.env.dev .env'
-	        sh 'docker build --platform linux/amd64 -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+                if (env.GIT_BRANCH == 'production') {
+                sh 'cp /var/jenkins_home/env/.env.care-fe-prod .env.care-fe-prod'
+                sh "sed -i 's/ENVI/.env.care-fe-prod/g' Dockerfile"
+	        sh 'docker build -t $DOCKER_IMAGE_NAME:prod -f Dockerfile .'
+                } else if (env.GIT_BRANCH == 'develop') {
+                sh 'cp /var/jenkins_home/env/.env.care-fe-dev .env.care-fe-dev'
+                sh "sed -i 's/ENVI/.env.care-fe-dev/g' Dockerfile"
+	        sh 'docker build -t $DOCKER_IMAGE_NAME:dev -f Dockerfile .'
+                } else {
+                sh 'cp /var/jenkins_home/env/.env.care-fe-stg .env.care-fe-stg'
+                sh "sed -i 's/ENVI/.env.care-fe-stg/g' Dockerfile"
+                sh 'docker build -t $DOCKER_IMAGE_NAME:stg -f Dockerfile .'
                 }
                 }
             }
         }
-        stage('Login to Docker Hub') {
+        stage('Login to AWS ECR') {
+            when {
+                   anyOf {
+                     branch 'production';
+                     branch 'staging';
+		     branch 'develop'
+                   }
+            }
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials-id', 
-                                                  usernameVariable: 'DOCKER_HUB_USER', 
-                                                  passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
-                    // Log in to Docker Hub
-                    sh "echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USER --password-stdin"
-                }
+                // Log in to AWS ECR using AWS CLI
+                sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY"
             }
         }
 
         stage('Tag and Push to ECR') {
             when {
                    anyOf {
-		    branch 'react-frontend'
+                     branch 'production';
+                     branch 'staging';
+		    branch 'develop'
                    }
             }
             steps {
                 script {
-                 if (env.GIT_BRANCH == 'production-test') {
-                sh "docker push $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG"
-                // Cleanup the Docker image
-                 } else if (env.GIT_BRANCH == 'react-frontend') {
+                 if (env.GIT_BRANCH == 'production') {
+                sh "docker tag $DOCKER_IMAGE_NAME:prod $ECR_REPOSITORY/$DOCKER_IMAGE_NAME:prod"
                 // Push the Docker image to ECR
-                sh "docker push $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG"
+                sh "docker push $ECR_REPOSITORY/$DOCKER_IMAGE_NAME:prod"
                 // Cleanup the Docker image
-                 }
+                sh "docker images  | grep $DOCKER_IMAGE_NAME | grep prod | awk '{print \$3}' | xargs -L 1 docker rmi -f"
+                 } else if (env.GIT_BRANCH == 'develop') {
+                sh "docker tag $DOCKER_IMAGE_NAME:dev $ECR_REPOSITORY/$DOCKER_IMAGE_NAME:dev"
+                // Push the Docker image to ECR
+                sh "docker push $ECR_REPOSITORY/$DOCKER_IMAGE_NAME:dev"
+                // Cleanup the Docker image
+                sh "docker images  | grep $DOCKER_IMAGE_NAME | grep dev | awk '{print \$3}' | xargs -L 1 docker rmi -f"
+                 } else {
+                // Tag your Docker image with the ECR repository URI
+                sh "docker tag $DOCKER_IMAGE_NAME:stg $ECR_REPOSITORY/$DOCKER_IMAGE_NAME:stg"
+
+                // Push the Docker image to ECR
+                sh "docker push $ECR_REPOSITORY/$DOCKER_IMAGE_NAME:stg"
+
+                // Cleanup the Docker image
+                sh "docker images  | grep $DOCKER_IMAGE_NAME | grep stg | awk '{print \$3}' | xargs -L 1 docker rmi -f"
+                }
                 }
             }
-            } 	        
-        stage ('deploy to dev') {
+            } 	
+        stage ('Deploy to staging ') {
             when {
-                branch 'react-frontend'
+                branch 'staging'
             }
             steps {
                 script {
-                        def servers = ['38.242.198.81']
-                        def branch = 'react-frontend'
+                        def servers = ['10.217.126.29']
+                        def branch = 'staging'
                         deploy_docker (servers,branch)
                     }
                 }
             post {
                 always {
-            echo 'I will always run!'
+                    jiraSendDeploymentInfo environmentId: 'staging', environmentName: 'staging', environmentType: 'staging'
                 }
-            }                
+            } 	
 			}
-        stage ('deploy to staging ') {
+        stage ('Deploy to develop ') {
             when {
-                branch 'prod-frontend'
+                branch 'develop'
             }
             steps {
                 script {
-                        def servers = ['192.168.1.13']
-                        def branch = 'prod-frontend'
-                        deploy (servers,branch)
+                        def servers = ['10.217.126.24']
+                        def branch = 'develop'
+                        deploy_docker (servers,branch)
                     }
                 }
             post {
                 always {
-            echo 'I will always run!'
+                    jiraSendDeploymentInfo environmentId: 'development', environmentName: 'development', environmentType: 'development'
                 }
-            }             
-			}
-       	}
-    post { 
-        always { 
-            echo 'I will always run!'
-           
-        }
-    }
+            }  		
+			}	    
+        stage ('Deploy to docker prod') {
+            when {
+                branch 'production'
+            }
+            steps {
+                script {
+                        def servers = ['10.217.126.27']
+			def branch = 'production'
+                        deploy_docker (servers,branch)
+                }
+            }
+            post {
+                always {
+                    jiraSendDeploymentInfo environmentId: 'production', environmentName: 'production', environmentType: 'production'
+                }
+            } 	
+		}
+        stage ('Deploy to prod') {
+            when {
+                branch 'production'
+            }
+            steps {
+                script {
+                        def servers = ['10.217.126.27']
+			def branch = 'production'
+                        deploy (servers,branch)
+                }
+            }
+            post {
+                always {
+                    jiraSendDeploymentInfo environmentId: 'production', environmentName: 'production', environmentType: 'production'
+                }
+            }   		
+		}
+	}
 }
