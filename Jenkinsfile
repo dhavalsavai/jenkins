@@ -1,24 +1,25 @@
 #!/usr/bin/env groovy
 
-def deploy (servers, branch) {
+def deploy(servers, branch) {
     script {
         for (item in servers) {
             println "Deploying to ${item}."
-            sh(script: """
-	    whoami
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
-		if [ "${branch}" == "prod" ]; then
-		echo "Deployment server cmd execution in  IP address is: $(hostname -I | awk '{print $1}')"
-                    ./deploy.sh
-                elif [ "${branch}" == "develop" ]; then
-		echo "Deployment server cmd execution in  IP address is: $(hostname -I | awk '{print $1}')"
-                    ./deploy.sh
-                fi
-            '"
-            """)
+            sh(script: '''
+                whoami
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'"${item}"' bash -c "'
+                    if [ "${branch}" == "prod" ]; then
+                        echo "Deployment server cmd execution in IP address is: $(hostname -I | awk '\''{print $1}'\'')"
+                        ./deploy.sh
+                    elif [ "${branch}" == "develop" ]; then
+                        echo "Deployment server cmd execution in IP address is: $(hostname -I | awk '\''{print $1}'\'')"
+                        ./deploy.sh
+                    fi
+                '"
+            ''')
         }
     }
 }
+
 
 def deploy_docker(servers, branch = '') {
     script {
