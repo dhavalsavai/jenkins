@@ -1,60 +1,126 @@
+#!/usr/bin/env groovy
+
+def deploy_docker(servers, branch = '') {
+    script {
+        for (item in servers) {
+            println "Deploying to ${item}."
+            sh(script: """
+                whoami
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
+                   cd /home/ubuntu/scripts && source ~/scripts/deploy.sh && zero_downtime_deploy_be_'${branch}'
+                '"
+            """)
+        }
+    }
+}
+
 pipeline {
-    agent { label 'docker-node' }
+    agent {
+        node {
+            label 'docker-node'
+        }
+    }
     environment {
         DOCKER_HUB_REPO = 'dksavai/dksavai-test'  // Your Docker Hub repository
-        DOCKER_IMAGE_TAG = 'backend-test-dev'  // Custom tag format
+        DOCKER_IMAGE_TAG = 'backend-dev' 
     }
     stages {
-        stage('Checkout') {
+        stage ('Checkout') {
             steps {
-                script {
-                    checkout([$class: 'GitSCM', 
-                              branches: [[name: 'nodejs-backend']], 
-                              userRemoteConfigs: [[
-                                  url: 'https://github.com/dhavalsavai/jenkins.git',
-                                  credentialsId: 'github-id' // Add credentials for private repo
-                              ]]
-                    ])
-                }
+                checkout scm: [
+                    $class: 'GitSCM',
+                    branches: scm.branches,
+                    doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+                    extensions: [[$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: '']],
+                    userRemoteConfigs: scm.userRemoteConfigs
+                ]
             }
         }
-        stage('Build Docker Image') {
+        stage('Main Build Docker Image') {
+            when {
+                anyOf {
+                    branch 'prod-backend'
+                    branch 'dev-backend'
+                }
+            }
             steps {
                 script {
-                    sh 'docker build -t $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG .'
+                    if (env.GIT_BRANCH == 'prod-backend') {
+                        sh 'docker build -t $DOCKER_HUB_REPO:prod -f Dockerfile .'
+                    } else if (env.GIT_BRANCH == 'dev-backend') {
+                        sh 'docker build -t $DOCKER_HUB_REPO:dev -f Dockerfile .'
+                    } else {
+                        echo "I will always run main build docker image condition applied."
+                    }
                 }
             }
         }
         stage('Login to Docker Hub') {
+            when {
+                anyOf {
+                    branch 'prod-backend'
+                    branch 'dev-backend'
+                }
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials-id', 
                                                   usernameVariable: 'DOCKER_HUB_USER', 
                                                   passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                    // Log in to Docker Hub
                     sh "echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USER --password-stdin"
                 }
             }
         }
-        stage('Push to Docker Hub') {
-            steps {
-                sh "docker push $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG"
+        stage('Tag and Push to Dockerhub') {
+            when {
+                anyOf {
+                    branch 'prod-backend'
+                    branch 'dev-backend'
+                }
             }
-        }
-        stage('Deploy on Jenkins Server') {
             steps {
                 script {
-                    sh """
-                    docker pull $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG
-                    docker stop test_backend || true
-                    docker rm test_backend || true
-                    docker run -d --name test_backend -p 3000:3000 $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG
-                    """
+                    if (env.GIT_BRANCH == 'prod-backend') {
+                        sh "docker push $DOCKER_HUB_REPO:backend-prod"
+                    } else if (env.GIT_BRANCH == 'dev-backend') {
+                        sh "docker push $DOCKER_HUB_REPO:backend-dev"
+                    }
                 }
             }
         }
-    }
-    post { 
-        always { 
-            echo 'Pipeline execution complete.'
+        stage ('Deploy to develop') {
+            when {
+                branch 'dev-backend'
+            }
+            steps {
+                script {
+                    def servers = ['98.81.247.18']
+                    def branch = 'dev-backend'
+                    deploy_docker(servers, branch)
+                }
+            }
+            post {
+                always {
+                    echo "I will always run"
+                }
+            }
+        }
+        stage ('Deploy to prod') {
+            when {
+                branch 'prod-backend'
+            }
+            steps {
+                script {
+                    def servers = ['54.91.121.21']
+                    def branch = 'prod-backend'
+                    deploy_docker(servers, branch)
+                }
+            }
+            post {
+                always {
+                    echo "I will always run"
+                }
+            }
         }
     }
 }
