@@ -8,8 +8,10 @@ def deploy (servers, branch) {
 	    whoami
             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "'
                 if [ ${branch} == 'develop' ]; then
+		     ifconfig
                     ./deploy.sh
                 elif [ ${branch} == 'prod' ]; then
+		    ifconfig
                     ./deploy.sh
                 fi
             '"
