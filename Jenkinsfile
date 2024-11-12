@@ -66,9 +66,9 @@ pipeline {
             steps {
                 script {
                     if (env.GIT_BRANCH == 'prod') {
-                        sh "docker push $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG:prod"
+                        sh "docker push $DOCKER_HUB_REPO:prod"
                     } else if (env.GIT_BRANCH == 'develop') {
-                        sh "docker push $DOCKER_HUB_REPO:$DOCKER_IMAGE_TAG:dev"
+                        sh "docker push $DOCKER_HUB_REPO:dev"
                     }
                 }
             }
