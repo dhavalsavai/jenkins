@@ -6,7 +6,7 @@ def deploy(servers, branch) {
             println "Deploying to ${item}."
             sh(script: """
                 whoami
-                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${item} bash -c \"
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c \"
                     if [ '${branch}' == 'develop' ]; then
                         ifconfig
                         ./deploy.sh
