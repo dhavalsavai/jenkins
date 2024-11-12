@@ -7,11 +7,11 @@ def deploy(servers, branch) {
             sh(script: """
                 whoami
                 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${item} bash -c \"
-                    if [ \"\${branch}\" == \"prod\" ]; then
-                        echo \"Deployment server cmd execution in IP address is: \$(hostname -I | awk '{print \$1}')\"
+                    if [ \\"${branch}\\" == \\"prod\\" ]; then
+                        echo \\"Deployment server cmd execution in IP address is: \$(hostname -I | awk '{print \\$1}')\\"
                         ./deploy.sh
-                    elif [ \"\${branch}\" == \"develop\" ]; then
-                        echo \"Deployment server cmd execution in IP address is: \$(hostname -I | awk '{print \$1}')\"
+                    elif [ \\"${branch}\\" == \\"develop\\" ]; then
+                        echo \\"Deployment server cmd execution in IP address is: \$(hostname -I | awk '{print \\$1}')\\"
                         ./deploy.sh
                     fi
                 \"
@@ -19,6 +19,7 @@ def deploy(servers, branch) {
         }
     }
 }
+
 
 
 
