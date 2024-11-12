@@ -22,7 +22,7 @@ pipeline {
     }
     environment {
         DOCKER_HUB_REPO = 'dksavai/dksavai-test'  // Your Docker Hub repository
-        DOCKER_IMAGE_TAG = 'backend-dev' 
+        DOCKER_IMAGE_TAG = 'backend' 
     }
     stages {
         stage ('Checkout') {
@@ -46,9 +46,9 @@ pipeline {
             steps {
                 script {
                     if (env.GIT_BRANCH == 'prod-backend') {
-                        sh 'docker build -t $DOCKER_HUB_REPO:prod -f Dockerfile .'
+                        sh 'docker build -t $DOCKER_HUB_REPO:backend-prod -f Dockerfile .'
                     } else if (env.GIT_BRANCH == 'dev-backend') {
-                        sh 'docker build -t $DOCKER_HUB_REPO:dev -f Dockerfile .'
+                        sh 'docker build -t $DOCKER_HUB_REPO:backend-dev -f Dockerfile .'
                     } else {
                         echo "I will always run main build docker image condition applied."
                     }
