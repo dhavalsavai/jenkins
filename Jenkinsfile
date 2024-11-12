@@ -31,6 +31,7 @@ pipeline {
                     if (env.GIT_BRANCH == 'production') {
                         sh 'docker build -t $DOCKER_IMAGE_NAME:prod -f Dockerfile .'
                     } else if (env.GIT_BRANCH == 'develop') {
+                        echo "docker images build from develop branch"
                         sh 'docker build -t $DOCKER_IMAGE_NAME:dev -f Dockerfile .'
                     } else {
                         echo "I will always run main build docker image condition applied."
