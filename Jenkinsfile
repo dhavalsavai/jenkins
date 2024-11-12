@@ -45,7 +45,7 @@ pipeline {
             }
             steps {
                 script {
-                    if (env.GIT_BRANCH == 'production') {
+                    if (env.GIT_BRANCH == 'prod') {
                         sh 'docker build -t $DOCKER_HUB_REPO:prod -f Dockerfile .'
                     } else if (env.GIT_BRANCH == 'develop') {
                         sh 'docker build -t $DOCKER_HUB_REPO:dev -f Dockerfile .'
