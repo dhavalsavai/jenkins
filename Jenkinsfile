@@ -6,7 +6,7 @@ def deploy_docker(servers, branch = '') {
             println "Deploying to ${item}."
             sh(script: """
 	    whoami
-            ssh -o StrictHostKeyChecking=no ubuntu@'${item}' bash -c "'
+            ssh -o StrictHostKeyChecking=no ubuntu@"${item}" bash -c "'
 	    echo "Deployment server cmd execution in  IP address is: $(hostname -I | awk '{print $1}')"
                cd /home/ubuntu/scripts && source ~/scripts/deploy.sh && zero_downtime_deploy_fe_'${branch}'
             '"
