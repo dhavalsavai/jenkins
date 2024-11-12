@@ -29,10 +29,10 @@ pipeline {
                 script {
                     // Build your Docker image here
                     if (env.GIT_BRANCH == 'production') {
-                        sh 'docker build -t $DOCKER_IMAGE_NAME:prod -f Dockerfile .'
+                        sh 'docker build -t $DOCKER_HUB_REPO:prod -f Dockerfile .'
                     } else if (env.GIT_BRANCH == 'develop') {
                         echo "docker images build from develop branch"
-                        sh 'docker build -t $DOCKER_IMAGE_NAME:dev -f Dockerfile .'
+                        sh 'docker build -t $DOCKER_HUB_REPO:dev -f Dockerfile .'
                     } else {
                         echo "I will always run main build docker image condition applied."
                     }
