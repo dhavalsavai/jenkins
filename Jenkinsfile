@@ -94,7 +94,7 @@ pipeline {
             }
             steps {
                 script {
-                    def servers = ['98.81.247.18']
+                    def servers = ['34.234.54.61']
                     def branch = 'dev-backend'
                     deploy_docker(servers, branch)
                 }
@@ -111,7 +111,7 @@ pipeline {
             }
             steps {
                 script {
-                    def servers = ['54.91.121.21']
+                    def servers = ['52.54.84.170']
                     def branch = 'prod-backend'
                     deploy_docker(servers, branch)
                 }
