@@ -7,6 +7,8 @@ def deploy_helm(servers, branch = '') {
             sh(script: """
                 whoami
                 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "
+                whoami
+                hostname -I
                     echo Deploying Helm chart to ${item} for branch ${branch}
                     git clone https://github.com/dhavalsavai/jenkins.git
                     cd jenkins/helm-chart
@@ -14,7 +16,8 @@ def deploy_helm(servers, branch = '') {
                         --set image.repository=$DOCKER_HUB_REPO \\
                         --set image.tag=${branch} \\
                         --set app.environment=${branch}
-                    kubectl rollout restart deployment react-app
+                    export /home/ubuntu/bin/kubectl
+                    sudo kubectl rollout restart deployment react-app
                 "
             """)
         }
