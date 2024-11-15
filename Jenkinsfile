@@ -11,7 +11,6 @@ def deploy_helm(servers, branch = '') {
                     git clone https://github.com/dhavalsavai/jenkins.git
                     cd jenkins/helm-chart
                     helm upgrade --install react-app ./react-app \\
-                        --namespace ${branch} \\
                         --set image.repository=$DOCKER_HUB_REPO \\
                         --set image.tag=${branch} \\
                         --set app.environment=${branch}
