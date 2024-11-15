@@ -1,29 +1,21 @@
 #!/usr/bin/env groovy
 
-def deploy_with_helm(environment, dockerImageTag) {
-    script {
-        sh """
-            echo "Deploying to $environment using Helm"
-            hostname -I
-            helm upgrade --install react-app ./react-app \\
-                --namespace $environment \\
-                --set image.repository=$DOCKER_HUB_REPO \\
-                --set image.tag=$dockerImageTag \\
-                --set app.environment=$environment
-        """
-    }
-}
-
-def deploy_docker(servers, branch) {
+def deploy_helm(servers, branch = '') {
     script {
         for (item in servers) {
-            sh """
-                echo "Deploying to ${item} for branch ${branch}"
-                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${item} bash -c "'
-                    hostname -I
-                    echo Deployment on server: ${item}
-                '"
-            """
+            println "Deploying to ${item}."
+            sh(script: """
+                whoami
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "
+                    echo Deploying Helm chart to ${item} for branch ${branch}
+                    cd helm-chart
+                    helm upgrade --install react-app ./react-app \\
+                        --namespace ${branch} \\
+                        --set image.repository=$DOCKER_HUB_REPO \\
+                        --set image.tag=${branch} \\
+                        --set app.environment=${branch}
+                "
+            """)
         }
     }
 }
@@ -39,7 +31,7 @@ pipeline {
         DOCKER_IMAGE_TAG = 'frontend-dev' 
     }
     stages {
-        stage('Checkout') {
+        stage ('Checkout') {
             steps {
                 checkout scm: [
                     $class: 'GitSCM',
@@ -50,17 +42,22 @@ pipeline {
                 ]
             }
         }
-        stage('Build Docker Image') {
+        stage('Main Build Docker Image') {
             when {
                 anyOf {
                     branch 'prod'
-                    branch 'helm-develop'
+                    branch 'develop'
                 }
             }
             steps {
                 script {
-                    def tag = env.BRANCH_NAME == 'prod' ? 'prod' : 'dev'
-                    sh "docker build -t $DOCKER_HUB_REPO:$tag -f Dockerfile ."
+                    if (env.GIT_BRANCH == 'prod') {
+                        sh 'docker build -t $DOCKER_HUB_REPO:prod -f Dockerfile .'
+                    } else if (env.GIT_BRANCH == 'develop') {
+                        sh 'docker build -t $DOCKER_HUB_REPO:dev -f Dockerfile .'
+                    } else {
+                        echo "I will always run main build docker image condition applied."
+                    }
                 }
             }
         }
@@ -68,65 +65,53 @@ pipeline {
             when {
                 anyOf {
                     branch 'prod'
-                    branch 'helm-develop'
+                    branch 'develop'
                 }
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials-id', 
                                                   usernameVariable: 'DOCKER_HUB_USER', 
                                                   passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                    // Log in to Docker Hub
                     sh "echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USER --password-stdin"
                 }
             }
         }
-        stage('Tag and Push Docker Image') {
+        stage('Tag and Push to Dockerhub') {
             when {
                 anyOf {
                     branch 'prod'
-                    branch 'helm-develop'
+                    branch 'develop'
                 }
             }
             steps {
                 script {
-                    def tag = env.BRANCH_NAME == 'prod' ? 'prod' : 'dev'
-                    sh "docker tag $DOCKER_HUB_REPO:$tag $DOCKER_HUB_REPO:$tag"
-                    sh "docker push $DOCKER_HUB_REPO:$tag"
+                    if (env.GIT_BRANCH == 'prod') {
+                        sh "docker push $DOCKER_HUB_REPO:prod"
+                    } else if (env.GIT_BRANCH == 'develop') {
+                        sh "docker push $DOCKER_HUB_REPO:dev"
+                    }
                 }
             }
         }
-        stage('Deploy with Helm') {
+        stage ('Deploy to develop') {
             when {
-                anyOf {
-                    branch 'prod'
-                    branch 'helm-develop'
-                }
+                branch 'develop'
             }
             steps {
                 script {
-                    def environment = env.BRANCH_NAME == 'prod' ? 'production' : 'staging'
-                    def tag = env.BRANCH_NAME == 'prod' ? 'prod' : 'dev'
-                    deploy_with_helm(environment, tag)
-                }
-            }
-        }
-        stage('Deploy to helm-develop') {
-            when {
-                branch 'helm-develop'
-            }
-            steps {
-                script {
-                    def servers = ['34.234.54.61']
-                    def branch = 'helm-develop'
-                    deploy_docker(servers, branch)
+                    def servers = ['98.81.247.18']
+                    def branch = 'develop'
+                    deploy_helm(servers, branch)
                 }
             }
             post {
                 always {
-                    echo "Deployment to helm-develop completed."
+                    echo "I will always run"
                 }
             }
         }
-        stage('Deploy to prod') {
+        stage ('Deploy to prod') {
             when {
                 branch 'prod'
             }
@@ -134,12 +119,12 @@ pipeline {
                 script {
                     def servers = ['54.91.121.21']
                     def branch = 'prod'
-                    deploy_docker(servers, branch)
+                    deploy_helm(servers, branch)
                 }
             }
             post {
                 always {
-                    echo "Deployment to prod completed."
+                    echo "I will always run"
                 }
             }
         }
