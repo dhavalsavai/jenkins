@@ -1,0 +1,31 @@
+replicaCount: 1
+
+image:
+  repository: dksavai/dksavai-test
+  tag: dev
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  name: docker-hub
+
+ingress:
+  enabled: true
+  host: "k8s-fe.devopsxpertz.com"
+  secretName: react-app-secret
+
+certManager:
+  clusterIssuer: letsencrypt-prod
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}
+serviceAccount:
+  create: true
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+
