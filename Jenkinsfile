@@ -46,14 +46,14 @@ pipeline {
             when {
                 anyOf {
                     branch 'prod'
-                    branch 'develop'
+                    branch 'helm-develop'
                 }
             }
             steps {
                 script {
                     if (env.GIT_BRANCH == 'prod') {
                         sh 'docker build -t $DOCKER_HUB_REPO:prod -f Dockerfile .'
-                    } else if (env.GIT_BRANCH == 'develop') {
+                    } else if (env.GIT_BRANCH == 'helm-develop') {
                         sh 'docker build -t $DOCKER_HUB_REPO:dev -f Dockerfile .'
                     } else {
                         echo "I will always run main build docker image condition applied."
@@ -65,7 +65,7 @@ pipeline {
             when {
                 anyOf {
                     branch 'prod'
-                    branch 'develop'
+                    branch 'helm-develop'
                 }
             }
             steps {
@@ -81,27 +81,27 @@ pipeline {
             when {
                 anyOf {
                     branch 'prod'
-                    branch 'develop'
+                    branch 'helm-develop'
                 }
             }
             steps {
                 script {
                     if (env.GIT_BRANCH == 'prod') {
                         sh "docker push $DOCKER_HUB_REPO:prod"
-                    } else if (env.GIT_BRANCH == 'develop') {
+                    } else if (env.GIT_BRANCH == 'helm-develop') {
                         sh "docker push $DOCKER_HUB_REPO:dev"
                     }
                 }
             }
         }
-        stage ('Deploy to develop') {
+        stage ('Deploy to helm-develop') {
             when {
-                branch 'develop'
+                branch 'helm-develop'
             }
             steps {
                 script {
                     def servers = ['98.81.247.18']
-                    def branch = 'develop'
+                    def branch = 'helm-develop'
                     deploy_helm(servers, branch)
                 }
             }
