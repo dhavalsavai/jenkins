@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: react-app
+  template:
+    metadata:
+      labels:
+        app: react-app
+    spec:
+      imagePullSecrets:
+      - name: docker-hub
+      containers:
+      - name: react-app
+        image: dksavai/dksavai-test:dev
+        ports:
+        - containerPort: 80
+
