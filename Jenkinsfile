@@ -5,13 +5,26 @@ def deploy_with_helm(environment, dockerImageTag) {
         sh """
             echo "Deploying to $environment using Helm"
             hostname -I
-            cd helm-chart
             helm upgrade --install react-app ./react-app \\
                 --namespace $environment \\
                 --set image.repository=$DOCKER_HUB_REPO \\
                 --set image.tag=$dockerImageTag \\
                 --set app.environment=$environment
         """
+    }
+}
+
+def deploy_docker(servers, branch) {
+    script {
+        for (item in servers) {
+            sh """
+                echo "Deploying to ${item} for branch ${branch}"
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${item} bash -c "'
+                    hostname -I
+                    echo Deployment on server: ${item}
+                '"
+            """
+        }
     }
 }
 
@@ -93,6 +106,40 @@ pipeline {
                     def environment = env.BRANCH_NAME == 'prod' ? 'production' : 'staging'
                     def tag = env.BRANCH_NAME == 'prod' ? 'prod' : 'dev'
                     deploy_with_helm(environment, tag)
+                }
+            }
+        }
+        stage('Deploy to helm-develop') {
+            when {
+                branch 'helm-develop'
+            }
+            steps {
+                script {
+                    def servers = ['34.234.54.61']
+                    def branch = 'helm-develop'
+                    deploy_docker(servers, branch)
+                }
+            }
+            post {
+                always {
+                    echo "Deployment to helm-develop completed."
+                }
+            }
+        }
+        stage('Deploy to prod') {
+            when {
+                branch 'prod'
+            }
+            steps {
+                script {
+                    def servers = ['54.91.121.21']
+                    def branch = 'prod'
+                    deploy_docker(servers, branch)
+                }
+            }
+            post {
+                always {
+                    echo "Deployment to prod completed."
                 }
             }
         }
