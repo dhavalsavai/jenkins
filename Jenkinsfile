@@ -4,6 +4,7 @@ def deploy_with_helm(environment, dockerImageTag) {
     script {
         sh """
             echo "Deploying to $environment using Helm"
+            hostname -I
             cd helm-chart
             helm upgrade --install react-app ./react-app \\
                 --namespace $environment \\
