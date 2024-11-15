@@ -10,6 +10,7 @@ def deploy_helm(servers, branch = '') {
                     echo Deploying Helm chart to ${item} for branch ${branch}
                     git clone https://github.com/dhavalsavai/jenkins.git
                     cd jenkins
+                    git pull
                     git checkout helm-develop
                     cd helm-chart
                     helm upgrade --install react-app ./react-app \\
