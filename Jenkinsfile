@@ -9,10 +9,7 @@ def deploy_helm(servers, branch = '') {
                 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "
                     echo Deploying Helm chart to ${item} for branch ${branch}
                     git clone https://github.com/dhavalsavai/jenkins.git
-                    cd jenkins
-                    git pull
-                    git checkout helm-develop
-                    cd helm-chart
+                    cd jenkins/helm-chart
                     helm upgrade --install react-app ./react-app \\
                         --namespace ${branch} \\
                         --set image.repository=$DOCKER_HUB_REPO \\
