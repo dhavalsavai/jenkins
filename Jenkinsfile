@@ -10,11 +10,11 @@ def deploy_helm(servers, branch = '') {
                     echo Deploying Helm chart to ${item} for branch ${branch}
                     git clone https://github.com/dhavalsavai/jenkins.git
                     cd jenkins/helm-chart
-                    helm repo update
                     helm upgrade --install react-app ./react-app \\
                         --set image.repository=$DOCKER_HUB_REPO \\
                         --set image.tag=${branch} \\
                         --set app.environment=${branch}
+                    kubectl rollout restart deployment react-app
                 "
             """)
         }
