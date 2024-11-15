@@ -8,6 +8,9 @@ def deploy_helm(servers, branch = '') {
                 whoami
                 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@'${item}' bash -c "
                     echo Deploying Helm chart to ${item} for branch ${branch}
+                    git clone https://github.com/dhavalsavai/jenkins.git
+                    cd jenkins
+                    git checkout helm-develop
                     cd helm-chart
                     helm upgrade --install react-app ./react-app \\
                         --namespace ${branch} \\
@@ -100,7 +103,7 @@ pipeline {
             }
             steps {
                 script {
-                    def servers = ['98.81.247.18']
+                    def servers = ['34.234.54.61']
                     def branch = 'helm-develop'
                     deploy_helm(servers, branch)
                 }
@@ -117,7 +120,7 @@ pipeline {
             }
             steps {
                 script {
-                    def servers = ['54.91.121.21']
+                    def servers = ['52.54.84.170']
                     def branch = 'prod'
                     deploy_helm(servers, branch)
                 }
