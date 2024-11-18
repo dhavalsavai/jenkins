@@ -15,7 +15,8 @@ def deploy_helm(servers, branch = '') {
                     helm upgrade --install react-app ./react-app \\
                         --set image.repository=$DOCKER_HUB_REPO \\
                         --set image.tag=${branch} \\
-                        --set app.environment=${branch}
+                        --set app.environment=${branch} \\
+                        --recreate-pods
                     sudo /home/ubuntu/bin/kubectl rollout restart deployment react-app
                 "
             """)
