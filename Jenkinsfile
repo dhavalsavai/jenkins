@@ -16,8 +16,7 @@ def deploy_helm(servers, branch = '') {
                         --set image.repository=$DOCKER_HUB_REPO \\
                         --set image.tag=${branch} \\
                         --set app.environment=${branch}
-                    alias kubectl='/home/ubuntu/bin/kubectl'
-                    sudo kubectl rollout restart deployment react-app
+                    sudo /home/ubuntu/bin/kubectl rollout restart deployment react-app
                 "
             """)
         }
