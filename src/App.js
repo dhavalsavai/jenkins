@@ -7,6 +7,7 @@ function App() {
             <div className="message-box">
                 <h1 className="title">This is</h1>
                 <p className="subtitle">Deployment using helm charts with kubernetes via jenkins pipeline</p>
+                <p className="subtitle">Created Helm Charts and deployment over AWS EKS using Jenkins CI/CD</p>
             </div>
         </div>
     );
